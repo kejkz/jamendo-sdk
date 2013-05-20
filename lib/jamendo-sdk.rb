@@ -50,7 +50,7 @@ class JamendoRequests
     @base_uri =  URI.parse "http://#{Jamendo::API_SERVER}/V#{Jamendo::API_VERSION}.0"
   end
   
-  def get_albums(artist_name, format='json')
+  def albums(artist_name, format='json')
     # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonpretty&artist_name=we+are+fm
     command = "/albums/?client_id=#{@client_id}&format=#{format}&artist_name=#{artist_name}"
     http = Net::HTTP.new(@base_uri.host, @base_uri.port)
@@ -63,6 +63,14 @@ class JamendoRequests
     puts response.body
     puts response.inspect
   end
+  
+  def artist(artist_name, format = 'json')
+    
+  end
+  
+  def autocomplete(artist_name, format = 'json')
+  
+  def 
 end
 
 class OAuthToken
