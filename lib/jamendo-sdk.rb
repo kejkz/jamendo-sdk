@@ -5,12 +5,14 @@ require 'cgi'
 require 'json'
 require 'yaml'
 
+
+# This module defines basic constants used through the whole program
 module Jamendo # :nodoc:
     API_SERVER = 'api.jamendo.com'
     WEB_SERVER = 'www.jamendo.com'
     
     API_VERSION = 3
-    SDK_VERSION = '0.0.1'
+    SDK_VERSION = '0.1.0'
 
     TEST_CLIENT_ID = 'b6747d04'
 end
@@ -23,7 +25,7 @@ class JamendoSession
   end
   # Request to Jamendo is expressed like:  
   # http[s]://api.jamendo.com/<version>/<entity>/<subentity>/?<api_parameter>=<value>
-  def do_http(uri, auth_token, request)
+  def do_http_authenticated(uri, auth_token, request)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     
@@ -47,30 +49,50 @@ end
 class JamendoRequests
   def initialize(client_id)
     @client_id = client_id
-    @base_uri =  URI.parse "http://#{Jamendo::API_SERVER}/V#{Jamendo::API_VERSION}.0"
   end
   
+  # Returns albums by artist (json as default format)
   def albums(artist_name, format='json')
     # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonpretty&artist_name=we+are+fm
     command = "/albums/?client_id=#{@client_id}&format=#{format}&artist_name=#{artist_name}"
-    http = Net::HTTP.new(@base_uri.host, @base_uri.port)
-    http.use_ssl = false
+    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + command)
+    http = Net::HTTP.new(uri.host, uri.port)
+    # puts uri.request_uri
+    # puts uri.path
+    # puts uri.query
+    # puts uri.to_s
+    request = Net::HTTP::Get.new(uri.request_uri)    
+    # http.use_ssl = false
     # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    request = Net::HTTP::Get.new(@base_uri.request_uri + command)
-    puts @base_uri.request_uri + command
-    request.initialize_http_header( {'User-Agent' => 'Test Script', 'Accept' => 'application/json' } )
+    # request = Net::HTTP::Get.new(uri.request_uri)
+    # request.initialize_http_header( {'User-Agent' => 'Test Script', 'Accept' => 'application/json' } )
     response = http.request(request)
-    puts response.body
-    puts response.inspect
+    JSON.parse(response.body)
   end
   
+  # returns artist information to client
   def artist(artist_name, format = 'json')
-    
+    command = "/artists/?client_id=#{@client_id}&format=#{format}&name=#{artist_name}"
+    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + command)
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    JSON.parse(response.body)    
   end
   
-  def autocomplete(artist_name, format = 'json')
+  # Automatically match any of parameters needed, use prefix as a search parameter
+  def autocomplete(prefix, format = 'json', limit = 3)
+    command = "/autocomplete/?client_id=#{@client_id}&format=#{format}&limit=3&prefix=#{prefix}&matchcount=1"
+    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + command)
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    JSON.parse(response.body)
+  end 
   
-  def 
+  def concerts(format = 'json', limit = 3, order = 'date_desc')
+    command = "/artists/?client_id=#{@client_id}&format=#{format}&name=#{artist_name}"
+  end
 end
 
 class OAuthToken
