@@ -12,7 +12,7 @@ module Jamendo # :nodoc:
     WEB_SERVER = 'www.jamendo.com'
     
     API_VERSION = 3
-    SDK_VERSION = '0.1.0'
+    SDK_VERSION = '0.1.1'
 
     TEST_CLIENT_ID = 'b6747d04' # You can use this key to test your code
 end
@@ -88,7 +88,7 @@ class JamendoRequests
   end
   
   # datebetween like '2012-01-01_2012-02-01'
-  def playlists(name, date_between, format = 'jsonv')
+  def playlists(name, date_between, format = 'json')
     query = "/?client_id=#{@client_id}&format=#{format}&namesearch=#{name}&datebetween=#{date_between}"
     path = __method__.to_s
     http_get(path, query)
@@ -98,16 +98,34 @@ class JamendoRequests
   # returns formatted JSON response
   def http_get(path, query)
     uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + path + query)
-    http = Net::HTTP.new(uri.host, uri.port)
+    http = Net::HTTP.new(uri.host, uri.port)    
     request = Net::HTTP::Get.new(uri.request_uri)
-    response = http.request(request)
-    JSON.parse(response.body)
+    begin
+      response = http.request(request)
+      JSON.parse(response.body)      
+    end
   end
   
   def concerts(format = 'json', limit = 3, order = 'date_desc')
     query = "/#{__method__.to_s}/?client_id=#{@client_id}&format=#{format}&name=#{artist_name}"
     
   end
+  
+  def radios(name, format = 'json')
+    query = "/radios/?client_id=#{@client_id}&format=#{format}&name=#{name}"
+  end
+  
+  # as Jamendo says, method king. It will take some time to make it complete
+  # fuzzy_tags parameter take array of strings
+  def tracks(format = json, limit = 2, fuzzy_tags )
+    query = "/tracks/?client_id=#{@client_id}&format=jsonpretty&limit=2&fuzzytags=#{fuzzy_tags.join('+')}&speed=medium+high+veryhigh&include=licenses+musicinfo+stats&groupby=artist_id
+"
+  end
+  # Verifies if response from Jamendo servers is correct
+  def assert_response(response)
+    
+  end
+  
 end
 
 class OAuthToken
