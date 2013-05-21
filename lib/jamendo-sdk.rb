@@ -31,7 +31,8 @@ class JamendoSession
     
     begin
       http.request(request)
-    rescue
+    rescue => e
+      e.inspect
     end
     
   end
