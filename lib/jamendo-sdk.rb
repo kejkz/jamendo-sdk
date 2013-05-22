@@ -60,22 +60,26 @@ class JamendoRequests
   
   # Returns albums by artist (json as default format)
   # date_between: Date format 'yyyy-mm-dd' separated by '_'
-  def albums(artist_name, format = :json, limit = 10)
+  # needed: client id
+  # Possible arguments: 
+  def albums(artist_name, *args)
     # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonpretty&artist_name=we+are+fm
-    query = "/?client_id=#{@client_id}&format=#{format}&artist_name=#{artist_name}"
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&artist_name=#{artist_name}"
     path = __method__.to_s
     http.get(path, query)
   end
   
   # return artist information to client
-  def artist(artist_name, format = :json)
+  def artist(artist_name, *args)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{artist_name}"
     path = __method__.to_s
     http_get(path, query)
   end
   
   # automatically match any of parameters needed, use prefix as a search parameter
-  def autocomplete(prefix, format = :json, limit = 3)
+  # set arguments as hash -  possible values:
+  # 
+  def autocomplete(prefix, *args)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&limit=3&prefix=#{prefix}&matchcount=1"
     path = __method__.to_s
     http_get(path, query)
@@ -89,13 +93,13 @@ class JamendoRequests
     http_get(path, query)
   end
   
-  def concerts(format = :json, limit = 3, order = 'date_desc')
+  def concerts(*args)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{artist_name}"
     path = __method__.to_s
     http_get(path, query)
   end
   
-  def radios(name, format = :json)
+  def radios(*args)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{name}"
     path = __method__.to_s
     http_get(path, query)
@@ -103,14 +107,15 @@ class JamendoRequests
   
   # as Jamendo says, method king. It will take some time to make it complete
   # fuzzy_tags parameter take array of strings
-  def tracks(format = :json, limit = 2, fuzzy_tags )
+  
+  def tracks(*args)
     fuzzy_tags = fuzzy_tags.join('+') unless fuzzy_tags.type_of? String
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&limit=2&fuzzytags=#{fuzzy_tags}&speed=medium+high+veryhigh&include=licenses+musicinfo+stats&groupby=artist_id"
     path = __method__to_s
     http_post(path, query)
   end
-  
-  def users(name, format = :json)
+  # client_id && (id || access_token || name)
+  def users(name)
     # http://api.jamendo.com/v3.0/users/?client_id=your_client_id&format=jsonpretty&name=claudod
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name#{name}"
     path = __method__to_s
@@ -124,9 +129,20 @@ class JamendoRequests
   end
   
   # This method is used for parameters formatting. Don't use it at your own
-  def format_parameters(param_object) 
-    
+  # use hash to return parameters string
+  def format_parameters(hash) 
+    query = ""
+    hash.each_with_index do | (param, value), index |
+      if value.kind_of? Array
+        query << "#{param}=#{value.join(',')}"
+      else
+        query << "#{param}=#{value}"
+      end
+      query << "&" unless hash.length - 1 == index
+    end
+    return query
   end
+  
   # gets parameters sent from main method
   # returns formatted response in format you would like to use
   # possible values are: :json, :xml
