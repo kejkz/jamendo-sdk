@@ -62,7 +62,7 @@ class JamendoRequests
   # date_between: Date format 'yyyy-mm-dd' separated by '_'
   def albums(artist_name, format = :json, limit = 10)
     # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonpretty&artist_name=we+are+fm
-    query = "/albums/?client_id=#{@client_id}&format=#{format}&artist_name=#{artist_name}"
+    query = "/?client_id=#{@client_id}&format=#{format}&artist_name=#{artist_name}"
     path = __method__.to_s
     http.get(path, query)
   end
@@ -182,10 +182,19 @@ class JamendoParameters
     if parameters.kind_of? Hash
       parameters.each do |name, value|
         instance_variable_set("@#{name}", value)
+        self.class.__send__(:attr_accessor, "#{name}")
       end
     elsif parameters.kind_of? Array
-      parameters.each { | name | instance_variable_set("@#{name}", '') }   
-    end
+      parameters.each do | name | 
+        instance_variable_set("@#{name}", '')
+        self.class.__send__(:attr_accessor, "#{name}")
+      end
+    end        
+  end
+  
+  # Method that validates all key values from this class
+  def validate
+    map = ''
   end
 end
 
