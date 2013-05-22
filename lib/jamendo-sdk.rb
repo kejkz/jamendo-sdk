@@ -4,6 +4,7 @@ require 'net/https'
 require 'cgi'
 require 'json'
 require 'yaml'
+require 'rexml/document'
 
 
 # This module defines basic constants used through the whole program
@@ -96,14 +97,41 @@ class JamendoRequests
   end
   
   # Posts parameters sent from main method
-  # returns formatted JSON response
+  # returns formatted response in format you would like to use
+  # possible values are: :json, :xml
   def http_get(path, query)
     uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + path + query)
     http = Net::HTTP.new(uri.host, uri.port)    
     request = Net::HTTP::Get.new(uri.request_uri)
     begin
       response = http.request(request)
-      JSON.parse(response.body)      
+      parse_response(response.body)
+    rescue => e
+      e.inspect      
+    end
+  end
+  
+  def http_post(path, query)
+    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}.0" + path + query)
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Post.new(uri.request_uri)
+    begin
+      response = http.request(request)
+      parse_response(response.body)
+    rescue => e
+      e.inspect      
+    end
+  end
+  
+  def parse_response(response, type = :json)
+    
+    case type
+    when :json
+      JSON.parse(response)
+    when :xml
+      REXML::Document.new(response)
+    else
+      raise RuntimeError "You are trying to parse unparsable!"
     end
   end
   
@@ -135,6 +163,7 @@ class OAuthToken
     @secret = secret
   end
 end
+#######################################################################################################################
 # Status messages returned by Jamendo
 # 0	Success	Success (or success with warning)
 # 1	Exception	A generic not well identificated error occurred
@@ -150,6 +179,7 @@ end
 # 11	Suspended Application	The client application has been suspended (illegal usage, ...)
 # 12	Access Token	Invalid Access Token.
 # 13	Insufficient Scope	Insufficient scope. The request requires higher privileges than provided by the access token
+######################################################################################################################
 class JamendoError < RuntimeError
     attr_accessor :http_response, :error, :user_error
     def initialize(error, http_response=nil, user_error=nil)
