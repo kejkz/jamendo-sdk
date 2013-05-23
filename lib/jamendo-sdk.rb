@@ -19,7 +19,8 @@ module Jamendo # :nodoc:
 end
 
 class JamendoSession
-  attr_accessor :access_plan
+  attr_accessor   :access_plan, :client_id
+  
   @access_plan = 'r' # Currently defined as read-only
   def initialize(client_id, *access_plan)
     @client_id = client_id
@@ -47,15 +48,17 @@ class JamendoSession
   
 end
 
-# This class is sending requests to Jamendo and always keeping latest response in self
+# Sending requests to Jamendo - keeps last response in self (read-only)
 # you can also set default format for response - by default json
+# Access token set to nil because it's not used by most read-only requests
 class JamendoRequests
   attr_reader :response
-  attr_accessor :format
+  attr_accessor :format, :access_token, :client_id
   
-  def initialize(client_id)
+  def initialize(client_id, access_token=nil)
     @client_id = client_id
-    @format = :json
+    @access_token = access_token
+    @format = :json   
   end  
   
   # Returns albums by artist (json as default format)
@@ -63,15 +66,16 @@ class JamendoRequests
   # needed: client id
   # Possible arguments: 
   def albums(artist_name, *args)
-    # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonpretty&artist_name=we+are+fm
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&artist_name=#{artist_name}"
+    # http://api.jamendo.com/v3.0/albums/?client_id=your_client_id&format=jsonp&artist_name=we+are+fm
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http.get(path, query)
   end
   
   # return artist information to client
+  # arguments have to be hash of parameter values
   def artist(artist_name, *args)
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{artist_name}"
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
   end
@@ -80,42 +84,40 @@ class JamendoRequests
   # set arguments as hash -  possible values:
   # 
   def autocomplete(prefix, *args)
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&limit=3&prefix=#{prefix}&matchcount=1"
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&prefix=#{prefix}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
   end
   
   # returns playlists
   # datebetween like '2012-01-01_2012-02-01'
-  def playlists(name, date_between, format = :json)
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&namesearch=#{name}&datebetween=#{date_between}"
+  def playlists(*args)
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
   end
   
   def concerts(*args)
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{artist_name}"
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
   end
   
   def radios(*args)
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}&name=#{name}"
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
   end
   
   # as Jamendo says, method king. It will take some time to make it complete
   # fuzzy_tags parameter take array of strings
-  
   def tracks(*args)
-    fuzzy_tags = fuzzy_tags.join('+') unless fuzzy_tags.type_of? String
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&limit=2&fuzzytags=#{fuzzy_tags}&speed=medium+high+veryhigh&include=licenses+musicinfo+stats&groupby=artist_id"
     path = __method__to_s
     http_post(path, query)
   end
   # client_id && (id || access_token || name)
-  def users(name)
+  def users(name, *args)
     # http://api.jamendo.com/v3.0/users/?client_id=your_client_id&format=jsonpretty&name=claudod
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name#{name}"
     path = __method__to_s
@@ -130,13 +132,14 @@ class JamendoRequests
   
   # This method is used for parameters formatting. Don't use it at your own
   # use hash to return parameters string
-  def format_parameters(hash) 
+  def format_parameters(hash)
+    raise JamendoError("You have to provide hash!") unless hash.kind_of?(Hash) 
     query = ""
     hash.each_with_index do | (param, value), index |
       if value.kind_of? Array
-        query << "#{param}=#{value.join(',')}"
+        query << "#{param}=#{CGI.escape(value.join(' ').squeeze(' '))}"
       else
-        query << "#{param}=#{value}"
+        query << "#{param}=#{CGI.escape(value.to_s.squeeze(' '))}"
       end
       query << "&" unless hash.length - 1 == index
     end
@@ -147,7 +150,7 @@ class JamendoRequests
   # returns formatted response in format you would like to use
   # possible values are: :json, :xml
   def http_get(path, query, format = :json)
-    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/#{path}#{query}")
+    uri = URI.parse("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/{path}#{query}")
     puts uri.request_uri
     http = Net::HTTP.new(uri.host, uri.port)    
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -161,7 +164,8 @@ class JamendoRequests
   
   # These method is only used for write access, so it will check if write access is set inside main class
   def http_post(path, query, format = :json)
-    uri = URI.parse ("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}" + path + query)
+    raise JamendoError.new('Please authenticate application before posting!') if @access_token.nil?
+    uri = URI.parse("http://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/?client_id=#{@client_id}&format=#{format.to_s}&#{path}#{query}")
     http = Net::HTTP.new(uri.host, uri.port)
     request = Net::HTTP::Post.new(uri.request_uri)
     begin
@@ -173,21 +177,20 @@ class JamendoRequests
   end  
   
   # Parsing response from server and checking for any kinds of problems with it
-  # Returns parse response or error state
-  def parse_response(response, type = :json)
+  # Returns json respone hash or rexml document
+  def parse_response(response)
     if response.kind_of?(Net::HTTPServerError)
       raise JamendoError.new("Dropbox Server Error: #{response} - #{response.body}", response)
     end
-    case type
+    case @format
     when :json
-      JSON.parse(response)
+      @response = JSON.parse(response)
     when :xml
-      REXML::Document.new(response)
+      @response = REXML::Document.new(response)
     else
-      raise RuntimeError "You are trying to parse unparsable!"
+      raise JamendoError.new('You are trying to parse unparsable!')
     end
-  end
-  
+  end  
 end
 
 # This is class that holds Jamendo search parameters
