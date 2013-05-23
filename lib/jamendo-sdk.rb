@@ -13,7 +13,7 @@ module Jamendo # :nodoc:
     WEB_SERVER = 'www.jamendo.com'
     
     API_VERSION = '3.0'
-    SDK_VERSION = '0.1.2'
+    SDK_VERSION = '0.1.5'
 
     TEST_CLIENT_ID = 'b6747d04' # You can use this key to test your code
 end
@@ -24,7 +24,7 @@ class JamendoSession
   @access_plan = 'r' # Currently defined as read-only
   def initialize(client_id, *access_plan)
     @client_id = client_id
-    @access_plan || access_plan
+    @access_plan ||= @access_plan
   end
   # Request to Jamendo is expressed like:  
   # http[s]://api.jamendo.com/<version>/<entity>/<subentity>/?<api_parameter>=<value>
@@ -116,6 +116,7 @@ class JamendoRequests
     path = __method__to_s
     http_post(path, query)
   end
+  
   # client_id && (id || access_token || name)
   def users(name, *args)
     # http://api.jamendo.com/v3.0/users/?client_id=your_client_id&format=jsonpretty&name=claudod
