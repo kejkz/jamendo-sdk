@@ -26,13 +26,23 @@ end
 describe JamendoSession do
   before :each do
     @client_id = '22h1ac47'
-    @access_plan = 'rw'
-    @jamendo_session = JamendoSession.new(@client_id, @access_plan)
+    @access_plan = :read_only
+    @jamendo_session = JamendoSession.new(@client_id)
   end    
     
-  it 'JamendoSession should have client id and access plan defined' do
+  it 'JamendoSession should have client id and access plan define d' do
     @jamendo_session.client_id == @client_id
     @jamendo_session.access_plan == @access_plan   
   end
     
+end
+
+describe JamendoError do
+  before :each do
+    @jamendo_error = JamendoError.new('Testing error responses')
+  end
+    
+  it 'JamendoError shoud return error values ' do
+    @jamendo_error.error.should include ('Testing error responses')
+  end
 end
