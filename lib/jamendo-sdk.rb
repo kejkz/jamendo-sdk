@@ -30,12 +30,7 @@ class JamendoSession
   # http[s]://api.jamendo.com/<version>/<entity>/<subentity>/?<api_parameter>=<value>
   def do_http_authenticated(uri, auth_token, request)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true    
-    begin
-      http.request(request)
-    rescue => e
-      e.inspect
-    end    
+    http.use_ssl = true        
   end
   
   def do_post(url, headers=nil, body=nil)
@@ -46,6 +41,22 @@ class JamendoSession
     uri = URI.parse(url)
   end
   
+  # Authorize 
+  def authorize(client_id, redirect, state, scope='music')
+    # https://api.jamendo.com/v3.0/oauth/authorize
+    uri = URI.parse("https://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/oauth/authorize?client_id=#{client_id}&redirect_uri=#{redirect_uri}&state=#{state}")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    begin
+      response = http.request(request)
+    rescue => e
+      e.inspect
+    end
+  end 
+  
+  def grant_request()
+    # "https://api.jamendo.com/v3.0/oauth/grant"
+  end
 end
 
 # Sending requests to Jamendo - keeps last response in self (read-only)
@@ -89,19 +100,6 @@ class JamendoRequests
   # imagesize = size of images to return - {25, 35, 50, 55, 60, 65, 70, 75, 85, 100, 130, 150, 200, 300, 400, 500, 600}
   # audioformat = mp32 - only viable format currently
   def albums(args={})
-    valid_parameters = [
-      :offset, 
-      :limit, 
-      :order, 
-      :id, 
-      :name, 
-      :namesearch, 
-      :artist_name, 
-      :date_between, 
-      :imagesize, 
-      :audioformat
-    ]
-    validate_parameters(args, valid_parameters)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
@@ -177,7 +175,7 @@ class JamendoRequests
     if resp_headers[:status] == 'success' 
       return true
     elsif resp_headers[:status] == 'false'
-      raise JamendoError.new(resp_headers[:error_message])
+      raise JamendoError.new(resp_headers[:error_message], nil, nil, resp_headers[:code])
       return false
     else
       raise JamendoError.new('Could not assert response!')
@@ -339,9 +337,42 @@ class JamendoError < RuntimeError
     @error = error
     @http_response = http_response
     @user_error = user_error
-    @error_code = error_code
+    @error_code = error_code.to_i
   end
-
+  
+  def encode_errors
+    case @error_code
+    when 1
+      return "Exception\nA generic not well identificated error occurred"
+    when 2
+      return "Http Method\nThe received http method is not supported for this method"
+    when 3
+      return "Value\nOne of the received parameters has a value not respecting requirements such as range, format, etc"
+    when 4
+      return "Required Parameter\nA required parameter has not been received, or it was empty"
+    when 5
+      return "Invalid Client Id\nThe client Id received does not exists or cannot be validated"
+    when 6
+      return "Rate Limit Exceeded\nThis requester app or the requester IP have exceeded the permitted rate limit"
+    when 7
+      return "Method Not Found\nJamendo Api rest-like reading methods are in the format api.jamendo.com/version/entity/subentity (subentity is optional). This exception is raised when entity and/or subentity methods don't exist"
+    when 8
+      return "Needed Parameter\nA needed parameter has not been received or/and this needed parameter has not the needed value"
+    when 9
+      return "Format\nThis exception is raised when the api call requests an unkown output format"
+    when 10
+      return "Entry Point\nThe used IP and/or port is not recognized as valid entry point"
+    when 11
+      return "Suspended Application\nThe client application has been suspended (illegal usage, ...)"
+    when 12
+      return "Access Token\nInvalid Access Token."
+    when 13
+      return "Insufficient Scope\nInsufficient scope. The request requires higher privileges than provided by the access token"
+    else
+      return "Undefined Error!"
+    end
+  end
+  
   def to_s
     return "#{error_code} #{user_error} (#{error})" if user_error
     "#{error}"
