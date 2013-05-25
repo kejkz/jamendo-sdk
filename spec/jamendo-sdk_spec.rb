@@ -6,6 +6,8 @@ describe JamendoRequests do
     @access_token = 'testtoken'
     @parameters = { one: 'one', two: ['one', 3, 'two words'], three: 3, four: 'four  five ', five: nil }
     @jamendo_request = JamendoRequests.new(@client_id)
+    @validate_parameters = {artist: 'frozen youghurt', id: 1234 }
+    @valid = [:artist, :id]
   end
   
   it 'should have client id defined' do
@@ -20,7 +22,11 @@ describe JamendoRequests do
     @jamendo_request.format_parameters(@parameters).should include('+')
     @jamendo_request.format_parameters(@parameters).should_not include('++')
   end
-    
+  
+  # it 'validate parameters should return back only correct parameters' do
+#     @jamendo_request.validate_parameters(@validate_parameters, @valid).should include(@validate_parameters)
+#   end
+      
 end
 
 describe JamendoSession do
@@ -44,5 +50,18 @@ describe JamendoError do
     
   it 'JamendoError shoud return error values ' do
     @jamendo_error.error.should include ('Testing error responses')
+  end
+end
+
+describe JamendoParameters do
+  before :all do
+    @parameters_hash = { artist: 'frozen youghurt', id: 1234 }
+    @parameters_array = [:jim, :jil]
+    @jamendo_parameters = JamendoParameters.new(@parameters_hash)
+  end
+  
+  it 'JamendoParameters should include methods sent as hash' do
+    @jamendo_parameters.artist.should include(@parameters_hash[:artist])
+    @jamendo_parameters.id.should include(@parameters_hash[:id].to_s)
   end
 end

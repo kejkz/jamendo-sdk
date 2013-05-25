@@ -34,4 +34,5 @@ Right now, coverage of all methods is not complete in any way, that's why my mai
 * Support OAuth2 authorisation via Jamendo API site
 * Support Jamendo PUT methods
 * Implement helper methods for searching through database
-* Store responses in Jamendo-specific object that can use it's values to further search Jamendo database
+* ~~Store responses in Jamendo-specific object that can use it's values to further search Jamendo database and returns a hash of values~~ __completed__
+* Part downloader of Jamendo albums, files, whatever

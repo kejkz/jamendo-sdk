@@ -12,7 +12,7 @@ module Jamendo
   WEB_SERVER = 'www.jamendo.com'
   
   API_VERSION = '3.0'
-  SDK_VERSION = '0.1.5'
+  SDK_VERSION = '0.1.7'
 
   TEST_CLIENT_ID = 'b6747d04' # You can use this key to test your code
 end
@@ -89,6 +89,19 @@ class JamendoRequests
   # imagesize = size of images to return - {25, 35, 50, 55, 60, 65, 70, 75, 85, 100, 130, 150, 200, 300, 400, 500, 600}
   # audioformat = mp32 - only viable format currently
   def albums(args={})
+    valid_parameters = [
+      :offset, 
+      :limit, 
+      :order, 
+      :id, 
+      :name, 
+      :namesearch, 
+      :artist_name, 
+      :date_between, 
+      :imagesize, 
+      :audioformat
+    ]
+    validate_parameters(args, valid_parameters)
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
@@ -101,7 +114,7 @@ class JamendoRequests
   
   # return artist information to client
   # arguments have to be hash of parameter values
-  def artist(args={})
+  def artists(args={})
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
@@ -138,23 +151,24 @@ class JamendoRequests
   
   # as Jamendo says, method king. It will take some time to make it complete
   def tracks(args={})
-    query = "/?client_id=#{@client_id}&format=#{format.to_s}#{format_parameters(args)}"
-    path = __method__to_s
-    http_post(path, query)
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s
+    http_get(path, query)
   end
   
   # client_id && (id || access_token || name)
   def users(name, args={})
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&name#{name}"
-    path = __method__to_s
+    path = __method__.to_s
     http_post(path, query)
   end
   
   # Method for searching through Jamendo database
-  # type: album, artist, track, playlists
+  # type: :album, :artist, :track, :playlists
   # search_for: string of your liking
-  def name_search(type, search_for)
-  
+  # order: 
+  def name_search( type, search_for, order_by = 'name' )
+    self.send(type.to_sym, { namesearch: search_for, order: order_by })
   end
   
   # Verifies if response from Jamendo servers is correct
@@ -166,7 +180,7 @@ class JamendoRequests
       raise JamendoError.new(resp_headers[:error_message])
       return false
     else
-      raise JamendoErro.new('Could not assert response!')
+      raise JamendoError.new('Could not assert response!')
     end
   end
   
@@ -233,17 +247,21 @@ class JamendoRequests
       raise JamendoError.new('You are trying to parse unparsable!')
     end
   end  
+  
+  def validate_parameters(sent_parameters, valid_parameters)
+    sent_parameters.select! { | param, value | valid_parameters.include?(param) }
+  end
+  
 end
 
 # This is class that holds Jamendo search parameters
 # Initialize it with hash that contains all parameters you need to use for your search
 # it will by default initialize all parameters needed for a given Jamendo method
 class JamendoParameters
-  attr_accessor :offset, :limit, :order, :datebetween, :image_size, :audioformat
   def initialize(parameters)
     if parameters.kind_of? Hash
       parameters.each do |name, value|
-        instance_variable_set("@#{name}", value)
+        instance_variable_set("@#{name}", value.to_s)
         self.class.__send__(:attr_accessor, "#{name}")
       end
     elsif parameters.kind_of? Array
@@ -258,9 +276,12 @@ class JamendoParameters
     Hash[instance_variables.map { |var| [var[1..-1].to_sym, instance_variable_get(var)] }]
   end
   
-  # Method that validates all key values from this class
-  def validate
-    map = ''
+  # Method that validates all key values from this class against parameters that they can use
+  # This method is convenient to clear all values values that are not needed in Jamendo requests
+  # !!!Still does not work!!!
+  def validate!(call_name)
+    params = self.methods
+    params.select { | method | call_name.include?(call_name) }
   end
 end
 
@@ -269,6 +290,27 @@ class OAuthToken
     @key = key
     @secret = secret
   end
+end
+
+# Class that will define part-downloader
+# Send url from Jamendo :audio tag
+# http://storage-new.newjamendo.com/download/track/145317/mp31/
+class JamendoDownloader
+  def self.download(url, local_path)
+    uri = URI.parse(url)
+    Net::HTTP.start(uri.host, uri.port) do | http |
+      begin
+        file = open(local_path, 'wb')
+        http.request_get(uri.path) do | response |
+          response.read_body do |segment|
+            file.write(segment)
+          end
+        end
+      ensure
+        file.close
+      end
+    end
+  end  
 end
 ###############################################################################
 # Status messages returned by Jamendo:
