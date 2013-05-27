@@ -10,11 +10,12 @@ require 'rexml/document'
 module Jamendo
   API_SERVER = 'api.jamendo.com'
   WEB_SERVER = 'www.jamendo.com'
+  DOWNLOAD_SERVER = 'storage-new.newjamendo.com'
   
   API_VERSION = '3.0'
-  SDK_VERSION = '0.1.7'
+  SDK_VERSION = '0.1.8'
 
-  TEST_CLIENT_ID = 'b6747d04' # You can use this key to test your code
+  TEST_CLIENT_ID = 'b6747d04' # Use this key to test framework and get methods
 end
 
 class JamendoSession
@@ -41,7 +42,7 @@ class JamendoSession
     uri = URI.parse(url)
   end
   
-  # Authorize 
+  # Authorize Jamendo application
   def authorize(client_id, redirect, state, scope='music')
     # https://api.jamendo.com/v3.0/oauth/authorize
     uri = URI.parse("https://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/oauth/authorize?client_id=#{client_id}&redirect_uri=#{redirect_uri}&state=#{state}")
@@ -104,11 +105,28 @@ class JamendoRequests
     path = __method__.to_s
     http_get(path, query)
   end
-      
-  # directly access download album
-  def download(type, id)
-    
+  
+  # Get tracks of selected album
+  def albums_tracks(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    http_get(path, query)
   end
+  
+  def albums_musicinfo(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    http_get(path, query)
+  end
+  
+  # You can call this method to be re-directed to access file of any kind via http on Jamendo
+  # form: # http://storage-new.newjamendo.com/download/track/145317/mp31/
+  # possible values: :albums, :tracks, :playlists
+  def file(file_type, id)
+    query = "/?client_id=#{@client_id}&#{id}"
+    path = "#{file_type}/#{__method__}.to_s"
+    resp = http_get(path, query)
+  end      
   
   # return artist information to client
   # arguments have to be hash of parameter values
@@ -116,6 +134,31 @@ class JamendoRequests
     query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
     path = __method__.to_s
     http_get(path, query)
+  end
+  
+  def artists_tracks(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    resp = http_get(path, query)
+  end
+  
+  def artists_albums(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    resp = http_get(path, query)
+  end
+  
+  # too much similar methods to my liking... looks like I will have to make it more dynamic
+  def artists_locations(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    resp = http_get(path, query)
+  end
+  
+  def artists_musicinfo(args={})
+    query = "/?client_id=#{@client_id}&format=#{format.to_s}&#{format_parameters(args)}"
+    path = __method__.to_s.gsub(/[_]/,'/')
+    resp = http_get(path, query)
   end
   
   # automatically match any of parameters needed, use prefix as a search parameter
