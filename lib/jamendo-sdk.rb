@@ -13,7 +13,7 @@ module Jamendo
   DOWNLOAD_SERVER = 'storage-new.newjamendo.com'
   
   API_VERSION = '3.0'
-  SDK_VERSION = '0.1.8'
+  SDK_VERSION = '0.1.9'
 
   TEST_CLIENT_ID = 'b6747d04' # Use this key to test framework and get methods
 end
@@ -289,8 +289,22 @@ class JamendoRequests
     end
   end  
   
-  def validate_parameters(sent_parameters, valid_parameters)
-    sent_parameters.select! { | param, value | valid_parameters.include?(param) }
+  # Method that is validating parameters and checking for object format
+  # This method is gateway for correctly setting parameters
+  def validate_parameters(sent_parameters)
+    valid_parameters = nil
+    if sent_parameters.is_a?(JamendoParameters)
+      valid_parameters = sent_parameters.to_hash
+    elsif sent_parameters.is_a?(Hash)
+      valid_parameters = format_parameters(sent_parameters)
+    elsif sent_parameters.is_a?(String)
+      valid_parameters = Hash.new
+      valid_parameters = { artist: sent_parameters }
+    else
+      raise JamendoError("Imposible to handle parameter you provided.")
+    end
+    return valid_parameters
+    #sent_parameters.select! { | param, value | valid_parameters.include?(param) }
   end
   
 end
@@ -323,6 +337,11 @@ class JamendoParameters
   def validate!(call_name)
     params = self.methods
     params.select { | method | call_name.include?(call_name) }
+  end
+
+  # Display your object as a nice list of parameters
+  def to_s
+    self.methods.each { |m| puts self.m }
   end
 end
 

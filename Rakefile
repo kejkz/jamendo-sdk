@@ -9,9 +9,9 @@ end
 
 gem_spec = Gem::Specification.new do |spec|
   spec.name = 'jamendo-sdk'
-  spec.version = '0.1.8'
+  spec.version = '0.1.9'
   spec.authors = ['Vladimir Karan']
-  spec.date = %q{2013-05-27}
+  spec.date = %q{2013-09-06}
   spec.description = 'Jamendo SDK Ruby'
   spec.summary = spec.description
   spec.email = 'kejkzz@gmail.com'
