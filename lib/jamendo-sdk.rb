@@ -13,51 +13,9 @@ module Jamendo
   DOWNLOAD_SERVER = 'storage-new.newjamendo.com'
   
   API_VERSION = '3.0'
-  SDK_VERSION = '0.1.9'
+  SDK_VERSION = '0.2'
 
   TEST_CLIENT_ID = 'b6747d04' # Use this key to test framework and get methods
-end
-
-class JamendoSession
-  attr_accessor   :access_plan, :client_id
-  
-  @access_plan = :read_only # Currently defined as read-only, can be :read_write
-  
-  def initialize(client_id, *access_plan)
-    @client_id = client_id
-    @access_plan ||= @access_plan
-  end
-  # Request to Jamendo is expressed like:  
-  # http[s]://api.jamendo.com/<version>/<entity>/<subentity>/?<api_parameter>=<value>
-  def do_http_authenticated(uri, auth_token, request)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true        
-  end
-  
-  def do_post(url, headers=nil, body=nil)
-    uri = URI.parse(url)
-  end
-  
-  def do_put(url, headers=nil, body=nil)
-    uri = URI.parse(url)
-  end
-  
-  # Authorize Jamendo application
-  def authorize(client_id, redirect, state, scope='music')
-    # https://api.jamendo.com/v3.0/oauth/authorize
-    uri = URI.parse("https://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/oauth/authorize?client_id=#{client_id}&redirect_uri=#{redirect_uri}&state=#{state}")
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    begin
-      response = http.request(request)
-    rescue => e
-      e.inspect
-    end
-  end 
-  
-  def grant_request()
-    # "https://api.jamendo.com/v3.0/oauth/grant"
-  end
 end
 
 # Sending requests to Jamendo - keeps last response in self (read-only)

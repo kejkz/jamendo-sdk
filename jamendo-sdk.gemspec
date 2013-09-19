@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Jamendo SDK Ruby'
   spec.summary = 'Jamendo SDK written in pure Ruby'
   spec.email = 'kejkzz@gmail.com'
-  spec.files = ['README', 'lib/jamendo-sdk.rb', 'spec/jamendo-sdk_spec.rb']
+  spec.files = ['README', 'lib/jamendo-sdk.rb', 'spec/jamendo-sdk_spec.rb', 'lib/jamendo-session', 'lib/jamendo-session']
   spec.homepage = ''
   spec.has_rdoc = true
   spec.add_dependency('')
