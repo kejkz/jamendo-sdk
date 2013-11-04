@@ -3,7 +3,7 @@ _Library for easy accesing and using Jamendo API with Ruby_
 
 **API source documentation**: <http://developer.jamendo.com/v3.0/>  
 **Licence**: Open Source  
-**version**: 0.1.9
+**version**: 0.2.0
 
 ## Description
 
