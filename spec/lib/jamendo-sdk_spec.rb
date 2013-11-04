@@ -5,14 +5,14 @@ describe JamendoRequests do
     @client_id = '8264n2s'
     @access_token = 'testtoken'
     @parameters = { one: 'one', two: ['one', 3, 'two words'], three: 3, four: 'four  five ', five: nil }
-    @jamendo_request = JamendoRequests.new(@client_id)
+    @jamendo_request = JamendoRequests.new(@client_id, @access_token)
     @validate_parameters = {artist: 'frozen youghurt', id: 1234 }
     @valid = [:artist, :id]
   end
   
   it 'should have client id defined' do
-    @jamendo_request.client_id == @client_id
-    @jamendo_request.access_token == @access_token
+    @jamendo_request.client_id.should eq(@client_id)
+    @jamendo_request.access_token.should eq(@access_token)
   end
   
   it 'format parameters should return correct list' do
@@ -21,12 +21,7 @@ describe JamendoRequests do
     @jamendo_request.format_parameters(@parameters).should_not include(' ')
     @jamendo_request.format_parameters(@parameters).should include('+')
     @jamendo_request.format_parameters(@parameters).should_not include('++')
-  end
-  
-  # it 'validate parameters should return back only correct parameters' do
-#     @jamendo_request.validate_parameters(@validate_parameters, @valid).should include(@validate_parameters)
-#   end
-      
+  end    
 end
 
 describe JamendoError do
