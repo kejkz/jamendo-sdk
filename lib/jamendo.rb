@@ -4,7 +4,7 @@ require 'jamendo-sdk/session'
 require 'jamendo-sdk/requests'
 
 # This module defines basic constants used through the whole program
-module JamendoSDK
+module Jamendo
   API_SERVER      = 'api.jamendo.com'
   WEB_SERVER      = 'www.jamendo.com'
   DOWNLOAD_SERVER = 'storage-new.newjamendo.com'
@@ -13,11 +13,4 @@ module JamendoSDK
   SDK_VERSION     = '0.2'
 
   TEST_CLIENT_ID  = 'b6747d04' # Use this key to test framework and get methods
-end
-
-class OAuthToken
-  def initialize(key,secret)
-    @key = key
-    @secret = secret
-  end
 end

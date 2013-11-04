@@ -4,6 +4,8 @@ require 'cgi'
 require 'json'
 require 'yaml'
 require 'rexml/document'
+require_relative '../jamendo-sdk'
+
 # Sending requests to Jamendo - keeps last response in self (read-only)
 # Access token set to nil because it's not used by most read-only requests
 class JamendoRequests
