@@ -14,7 +14,7 @@ class JamendoSession
   def initialize(client_id, client_secret, redirect_uri='', state='')
     @client_id = client_id
     @client_secret = client_secret
-    @redirect_uri = "http://kejkz.tumblr.com"
+    @redirect_uri = "http://localhost"
     @access_plan = :read_only
     @state = state
     @scope = 'music' # hard-coded due to Jamendo API documentation
@@ -29,11 +29,11 @@ class JamendoSession
   end
   
   def do_post(url, headers=nil, body=nil)
-    uri = URI.parse(url)
+    URI.parse(url)
   end
   
   def do_put(url, headers=nil, body=nil)
-    uri = URI.parse(url)
+    URI.parse(url)
   end
   
   def set_access_plan(access_plan)
@@ -44,13 +44,18 @@ class JamendoSession
     @client_id = client_id
   end
   
+  ############################################################################
+  # Returns authorisation response once it was completed
+  ############################################################################
   def get_auth_response
-    @auth_response.inspect
+    puts @auth_response.inspect
   end
   
-  # Authorize application https://api.jamendo.com/v3.0/oauth/authorize
+  ############################################################################
+  # Authorizes Jamendo application https://api.jamendo.com/v3.0/oauth/authorize
+  ############################################################################
   def authorize()
-    additional_params = "&state=#{@state}"
+    # additional_params = "&state=#{@state}"
     uri = URI.parse("https://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/oauth/authorize?client_id=#{@client_id}&redirect_uri=#{@redirect_uri}&state=TESTSTATE")
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
@@ -63,8 +68,10 @@ class JamendoSession
     @auth_response = auth_response.header['Location']    
   end
   
+  #############################################################################
   # Grant application access https://api.jamendo.com/v3.0/oauth/grant
-  # returns authenticate json object 
+  # returns authenticate json object and stores information in Oauth object
+  #############################################################################
   def grant(authorize_code)
     uri = URI.parse("https://#{Jamendo::API_SERVER}/v#{Jamendo::API_VERSION}/oauth/grant?client_id=#{@client_id}&client_secret=#{@client_secret}&grant_type=authorization_code&code=#{@auth_code}&redirect_uri=#{@redirect_uri}")
     http = Net::HTTP.new(uri.host, uri.port)
@@ -77,9 +84,26 @@ class JamendoSession
     end
     return JSON.parse(response.body, symbolize_names: true)
   end
+  
+  #############################################################################
+  # Opens authentication url (should work in every OS) in default browser
+  ############################################################################# 
+  def open_auth_url()
+    # link = "Insert desired link location here"
+    if RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
+      system "start #{@auth_response}"
+    elsif RbConfig::CONFIG['host_os'] =~ /darwin/
+      system('open', @auth_response)
+    elsif RbConfig::CONFIG['host_os'] =~ /linux|bsd/
+      system "xdg-open #{@auth_response}"
+    end    
+  end
 end
 
-class OAuthToken # :nodoc:
+###############################################################################
+# Keeps OAuth Token during session
+###############################################################################
+class OAuthToken
   def initialize(key, secret)
     @key = key
     @secret = secret
