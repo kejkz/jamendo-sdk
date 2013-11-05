@@ -5,6 +5,7 @@ require 'json'
 require 'yaml'
 require 'rexml/document'
 require 'jamendo'
+require 'jamendo/error'
 
 # Sending requests to Jamendo - keeps last response in self (read-only)
 # Access token set to nil because it's not used by most read-only requests
@@ -174,7 +175,7 @@ module Jamendo
     # This method is used for parameters formatting. Don't use it at your own
     # use hash to return parameters string
     def format_parameters(parameters={})
-      raise JamendoError.new("Please provide hash!") unless parameters.kind_of?(Hash)
+      raise Jamendo::Error.new("Please provide hash!") unless parameters.kind_of?(Hash)
       query = ""
       parameters.each_with_index do | (param, value), index |
         if value.kind_of?(Array)
@@ -222,7 +223,7 @@ module Jamendo
     # Returns json respone hash or rexml document
     def parse_response(response)
       if response.kind_of?(Net::HTTPServerError)
-        raise JamendoError.new("Jamendo Server Error: #{response} - #{response.body}", response)
+        raise Jamendo::Error.new("Jamendo Server Error: #{response} - #{response.body}", response)
       end
     
       case @format
@@ -231,7 +232,7 @@ module Jamendo
       when :xml
         REXML::Document.new(response.body)
       else
-        raise JamendoError.new('You are trying to parse unparsable!')
+        raise Jamendo::Error.new('You are trying to parse unparsable!')
       end
     end  
   

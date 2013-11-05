@@ -23,7 +23,7 @@ You will get hash containing only query results. It is also possible to use clas
 
 You can initialize it with or without additional parameters. Parameters are sent as a hash or as array. When sending hash, it will pair-match parameters as you would like, if you send array, it will use it's values to initialize object
 
-	p = JamendoParameters(artist: 'frozen youghurt', id: 1234)
+	p = Jamendo::Parameters(artist: 'frozen youghurt', id: 1234)
 
 Then you can acces any parameter or change it by it's name, like:
 
