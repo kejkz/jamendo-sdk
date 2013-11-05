@@ -1,12 +1,12 @@
-require './lib/jamendo-session'
+require 'jamendo/session'
 
 # Generic Jamendo session test
-describe JamendoSession do
+describe Jamendo::Session do
   before :each do
     @client_id = '22h1ac47'
     @access_plan = :read_only
     @client_secret = 'd1rdtysqrt'
-    @jamendo_session = JamendoSession.new(@client_id, @client_secret)    
+    @jamendo_session = Jamendo::Session.new(@client_id, @client_secret)    
     
   it 'JamendoSession should have client id and access plan defined when initialized' do
     expect(@jamendo_session.client_id).to eq(@client_id)

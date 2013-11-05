@@ -1,7 +1,7 @@
 # require 'rubygems'
-require 'jamendo-sdk/parameters'
-require 'jamendo-sdk/session'
-require 'jamendo-sdk/requests'
+require 'jamendo/parameters'
+require 'jamendo/session'
+require 'jamendo/requests'
 
 # This module defines basic constants used through the whole program
 module Jamendo

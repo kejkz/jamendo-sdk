@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path('../lib',__FILE__)
-require 'jamendo-sdk/version'
+require 'jamendo/version'
 
 Gem::Specification.new do |spec|
   spec.name           = 'jamendo-sdk'

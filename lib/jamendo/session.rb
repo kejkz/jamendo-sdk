@@ -4,7 +4,7 @@ require 'net/https'
 require 'cgi'
 require 'json'
 require 'yaml'
-require_relative './jamendo-sdk'
+require 'jamendo'
 
 module Jamendo
   # Define Jamendo session for authorising read/write client access

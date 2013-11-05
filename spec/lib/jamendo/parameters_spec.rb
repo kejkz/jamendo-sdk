@@ -1,8 +1,10 @@
-describe JamendoParameters do
+require 'jamendo/parameters'
+
+describe Jamendo::Parameters do
   before :all do
     @parameters_hash = { artist: 'frozen youghurt', id: 1234 }
     @parameters_array = [:jim, :jil]
-    @jamendo_parameters = JamendoParameters.new(@parameters_hash)
+    @jamendo_parameters = Jamendo::Parameters.new(@parameters_hash)
   end
   
   it 'JamendoParameters should include methods sent as hash' do

@@ -5,6 +5,7 @@ require 'bundler/gem_tasks'
 desc 'Default spec run'
 task :default => [:spec]
 
-RSpec::Core::RakeTask.new :spec do |t|
-  t.verbose = true
+RSpec::Core::RakeTask.new :spec do |spec|
+  spec.pattern = 'spec/**/*_spec.rb'
+  spec.verbose = true
 end

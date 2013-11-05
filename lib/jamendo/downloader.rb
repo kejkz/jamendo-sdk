@@ -1,7 +1,7 @@
 require 'net/http'
 
 # Class that will define part-downloader
-# Send url from Jamendo :audio tag
+# Send url from Jamendo :audio tag response
 # http://storage-new.newjamendo.com/download/track/145317/mp31/
 module Jamendo
   class JamendoDownloader

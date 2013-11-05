@@ -1,11 +1,11 @@
-require './lib/jamendo/jamendo-sdk'
+require 'jamendo'
 
-describe JamendoRequests do
+describe Jamendo::Requests do
   before :each do
     @client_id = '8264n2s'
     @access_token = 'testtoken'
     @parameters = { one: 'one', two: ['one', 3, 'two words'], three: 3, four: 'four  five ', five: nil }
-    @jamendo_request = JamendoRequests.new(@client_id, @access_token)
+    @jamendo_request = Jamendo::Requests.new(@client_id, @access_token)
     @validate_parameters = {artist: 'frozen youghurt', id: 1234 }
     @valid = [:artist, :id]
   end

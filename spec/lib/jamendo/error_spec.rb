@@ -1,3 +1,5 @@
+require 'jamendo/error'
+
 describe JamendoError do
   before :each do
     @jamendo_error = JamendoError.new('Testing error responses', nil, "Big mistake", 3)
